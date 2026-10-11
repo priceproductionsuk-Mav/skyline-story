@@ -52,6 +52,11 @@
     [7, 23], [23, 8], [7, 9], [8, 10], [9, 21], [21, 10],                 // platform top
     [11, 22], [22, 12], [9, 11], [10, 12], [21, 22], [23, 21],            // platform front
   ];
+  // Stage pieces, used to rebuild it piece by piece beside the steps:
+  // 0 platform, 1 uprights, 2 rig, 3 screen
+  const EDGE_PART = STAGE_EDGES.map((e, k) => (k < 8 ? 2 : k < 12 ? 1 : k < 18 ? 3 : 0));
+  const POINT_PART = STAGE_POINTS.map((p, k) =>
+    [7, 8, 9, 10, 11, 12, 21, 22, 23].includes(k) ? 0 : [0, 1, 19, 20].includes(k) ? 1 : [13, 14, 15, 16].includes(k) ? 3 : 2);
   const LAMPS = [2, 3, 4, 5, 6];
   const SCREEN = [13, 14, 15, 16];
   const SWITCH_ORIGIN = 22; // the light enters the stage here
@@ -76,6 +81,8 @@
   let W = 0, H = 0, desktop = false;
   let dots = [], looseEdges = [], treeEdges = [], treeAdj = [], edgeOf = new Map();
   let pulses = [];
+  let strandPaths = [];  // each strand's dots, left to right
+  let nextStrand = 0, strandTimer = 0;
 
   // Width of the network field: most of a phone screen, a centred block on desktop
   const fieldWidth = () => (desktop ? Math.min(W * 0.62, 900) : W * 0.88);
@@ -119,6 +126,8 @@
         d.pu = s0 + ((j + 0.5 + (Math.random() - 0.5) * 0.45) / m) * (s1 - s0);
         d.pv = strandV(k, u0 + ((d.pu - s0) / (s1 - s0)) * (u1 - u0)); // same shape, just wider
         d.mdelay = Math.random() * 0.3;
+        d.jx = (Math.random() - 0.5) * 0.08; // how loosely it sits on the outline at Audit
+        d.jy = (Math.random() - 0.5) * 0.08;
       });
       ids.sort((a, b) => dots[a].pu - dots[b].pu);
       for (let j = 1; j < m; j++) treeEdges.push([ids[j - 1], ids[j]]);    // along the strand
@@ -143,6 +152,7 @@
       let r = ((q + 0.5) / order.length) * total, k = 0;
       while (r > lens[k] && k < lens.length - 1) r -= lens[k++];
       const [a, b] = STAGE_EDGES[k], t = clamp(r / lens[k]);
+      dots[i].part = EDGE_PART[k];
       dots[i].su = lerp(STAGE_POINTS[a][0], STAGE_POINTS[b][0], t);
       dots[i].sv = lerp(STAGE_POINTS[a][1], STAGE_POINTS[b][1], t);
     });
@@ -150,13 +160,14 @@
     // The stage's key points are taken by the network dots that land closest to them
     const gap = (d, u, v) => Math.hypot(d.su - u, (d.sv - v) * 0.62);
     const keys = [], used = new Set();
-    STAGE_POINTS.forEach(([u, v]) => {
+    STAGE_POINTS.forEach(([u, v], k) => {
       let best = -1;
       dots.forEach((d, i) => { if (!used.has(i) && (best < 0 || gap(d, u, v) < gap(dots[best], u, v))) best = i; });
       used.add(best);
       keys.push(best);
       dots[best].su = u;
       dots[best].sv = v;
+      dots[best].part = POINT_PART[k];
     });
     // Re-index so key point k is dot k (the stage, lamps and screen look them up that way)
     const perm = keys.concat(dots.map((d, i) => i).filter(i => !used.has(i)));
@@ -173,6 +184,19 @@
     });
     // Light only travels along lines that end up on the stage
     treeAdj = adjacency(n, treeEdges.filter(e => !e.fold));
+    // Each strand's dots in order, split wherever a line folds away, so the Audit-stage
+    // light only flows along runs that trace the stage outline
+    strandPaths = [];
+    strands.forEach(ids => {
+      let run = [];
+      ids.map(i => newIndex[i]).forEach((i, j, arr) => {
+        const prev = arr[j - 1];
+        const e = j && treeEdges.find(t => (t[0] === prev && t[1] === i) || (t[0] === i && t[1] === prev));
+        if (j && e && e.fold) { if (run.length > 2) strandPaths.push(run); run = []; }
+        run.push(i);
+      });
+      if (run.length > 2) strandPaths.push(run);
+    });
     // A few lines along the strands have a small break; light fizzles out as it reaches one
     edgeOf = new Map();
     treeEdges.forEach((e, i) => {
@@ -290,6 +314,10 @@
       if (!looseEdges.length) return;
       pulses.push({ kind, edge: looseEdges[(Math.random() * looseEdges.length) | 0], rev: Math.random() < 0.5,
         d: 0, speed: 150 + Math.random() * 80, tail: 90, fail: 0.35 + Math.random() * 0.3 });
+    } else if (kind === 'strand') {
+      // a calm, orderly signal: one strand, left to right, end to end
+      const path = strandPaths[nextStrand++ % strandPaths.length];
+      if (path && path.length > 1) pulses.push({ kind: 'tree', nodes: path, d: 0, speed: 170, tail: 80 });
     } else if (kind === 'tree') {
       const path = randomWalk(treeAdj, (Math.random() * dots.length) | 0, 24);
       // stop at the first break along the way
@@ -362,6 +390,7 @@
   let last = performance.now();
   let clock = 0;
   let progress = null; // eased intro progress, trails the scroll position
+  let stepProgress = 0; // eased progress through the five steps (desktop)
 
   function line(a, b, color, alpha, width = 1) {
     if (alpha <= 0.003) return;
@@ -393,16 +422,57 @@
 
     // Beat weights: the network builds steadily through Why and How,
     // and the stage is complete and lit as the What line arrives (p = 0.84), then holds.
-    const morph = smooth(0.22, 0.4, p);      // Why → How: the loose lines swing into clean ones
-    const fade = 1 - smooth(0.8, 0.88, p);    // network lines hand over to the stage lines once they have landed on them
+    let morph = smooth(0.22, 0.4, p);      // Why → How: the loose lines swing into clean ones
+    let fade = 1 - smooth(0.8, 0.88, p);    // network lines hand over to the stage lines once they have landed on them
+    let form = smooth(0.46, 0.8, p);
+    let on = smooth(0.7, 0.84, p);
+    let ambient = 1 - smooth(0, H * 0.5, past);
+    const box = stageBox(past, pr);
+    // Where the network field sits: the whole screen in the intro
+    let field = { x: 0, y: 0, w: W, h: H };
+    let piecewise = false;
+    let netVis = 1; // overall visibility of the network (not the step line)
+
+    // Desktop Process: beside the steps the visual starts again from the messy network
+    // and rebuilds gradually as you scroll through them: organise (steps 1–2),
+    // the stage assembles piece by piece (step 3), light flows in (4), fully on (5)
+    if (desktop && past > 0 && markers.length) {
+      const top = markers[0].getBoundingClientRect().top;
+      const span = markers[markers.length - 1].getBoundingClientRect().top - top + H * 0.35;
+      const stepTarget = clamp((H * 0.85 - top) / span);
+      stepProgress += (stepTarget - stepProgress) * (reduceMotion ? 1 : 1 - Math.exp(-dt * 1.8));
+      const q = stepProgress;
+      // The lit stage fades out after What; while hidden it moves to the left column and
+      // resets, then fades back in as the messy network beside "Five steps"
+      const swap = H * 0.32;
+      const r = past < swap ? 0 : 1;
+      netVis = past < swap ? 1 - smooth(0, H * 0.3, past) : smooth(H * 0.62, H * 0.95, past);
+      morph = lerp(morph, smooth(0.04, 0.3, q), r);
+      form = lerp(form, smooth(0.32, 0.8, q), r);
+      on = lerp(on, smooth(0.78, 0.97, q), r);
+      fade = lerp(fade, 1 - smooth(0.8, 0.95, q), r);
+      ambient = 1;
+      piecewise = true;
+      // the field shrinks into the left column, the same width as the stage
+      const s = slot.getBoundingClientRect();
+      const fw = fieldWidth() / W;
+      const w = (s.width * 0.9) / fw, h = (s.width * 0.9 * 0.62 * 1.25) / 0.52;
+      const pin = Math.min(0, pr.bottom - H);
+      field = {
+        x: lerp(0, s.left + s.width / 2 - w / 2, r),
+        y: lerp(0, H * 0.5 - h / 2, r) + pin,
+        w: lerp(W, w, r),
+        h: lerp(H, h, r),
+      };
+    } else {
+      stepProgress = 0;
+    }
     const why = 1 - morph;
     const how = morph * fade;
-    const form = smooth(0.46, 0.8, p);
-    const on = smooth(0.7, 0.84, p);
-    const ambient = 1 - smooth(0, H * 0.5, past);
-    const box = stageBox(past, pr);
-    gapClose = smooth(0.46, 0.7, p);
+    gapClose = piecewise ? smooth(0.02, 0.4, form) : smooth(0.46, 0.7, p);
     const nodeOn = k => clamp(on * (maxDepth + 1) - depth[k]);
+
+    ctx.globalAlpha = netVis;
 
     // Dot positions: drift while scattered, converge on the stage as it forms
     dots.forEach((d, i) => {
@@ -410,10 +480,23 @@
       const drift = reduceMotion ? 0 : d.amp;
       // Why: scattered. How: settled onto its strand, drifting less
       const m = ease(clamp((morph - d.mdelay) / 0.7));
-      let x = lerp(d.u, d.pu, m) * W + Math.cos(t) * drift * (1 - 0.6 * m);
-      let y = lerp(d.v, d.pv, m) * H + Math.sin(t * 1.3) * drift * 0.7 * (1 - 0.6 * m);
-      // Every dot travels onto the stage outline
-      d.f = ease(clamp((form - d.delay) / 0.65));
+      const k = field.w / W; // drift scales with the field
+      let x, y;
+      if (piecewise) {
+        // Beside the steps the network organises straight into a loose, slightly larger
+        // outline of the stage (Audit), which then tightens into the real thing (Build)
+        const ax = box.x + (0.5 + (d.su - 0.5) * 1.12 + d.jx) * box.w;
+        const ay = box.y + (0.5 + (d.sv - 0.5) * 1.12 + d.jy) * box.h;
+        x = lerp(field.x + d.u * field.w, ax, m) + Math.cos(t) * drift * k * (1 - 0.7 * m);
+        y = lerp(field.y + d.v * field.h, ay, m) + Math.sin(t * 1.3) * drift * k * 0.7 * (1 - 0.7 * m);
+      } else {
+        x = field.x + lerp(d.u, d.pu, m) * field.w + Math.cos(t) * drift * k * (1 - 0.6 * m);
+        y = field.y + lerp(d.v, d.pv, m) * field.h + Math.sin(t * 1.3) * drift * k * 0.7 * (1 - 0.6 * m);
+      }
+      // Every dot travels onto the stage outline; beside the steps it builds piece by piece
+      d.f = piecewise
+        ? ease(clamp((form - d.part * 0.2 - d.delay * 0.22) / 0.32))
+        : ease(clamp((form - d.delay) / 0.65));
       x = lerp(x, box.x + d.su * box.w, d.f);
       y = lerp(y, box.y + d.sv * box.h, d.f);
       // key points stay bright; the rest settle as faint beads along the lines
@@ -425,7 +508,11 @@
     // Pulses
     if (!reduceMotion) {
       if (Math.random() < dt * 2.2 * why * ambient) spawn('loose');
-      if (Math.random() < dt * 1.8 * how) spawn('tree');
+      if (piecewise) {
+        // beside the steps: signals go out at a steady rhythm, strand after strand, top to bottom
+        strandTimer += dt * how;
+        if (strandTimer > 0.42) { strandTimer = 0; spawn('strand'); }
+      } else if (Math.random() < dt * 1.8 * how) spawn('tree');
       if (Math.random() < dt * 1.3 * on) spawn('stage');
     }
 
@@ -445,7 +532,9 @@
       const vis = Math.min(a.alpha, dots[e[1]].alpha, e.far >= 0 ? dots[e.far].alpha : 1);
       // Lines that would cut across the stage fold back into their own dot as the dots travel;
       // the rest settle onto the stage outline and become its lines
-      const tip = e.fold ? (k => ({ x: lerp(end.x, a.x, k), y: lerp(end.y, a.y, k) }))(ease(clamp(form * 1.8))) : end;
+      // (beside the steps they're already folded away once the lines organise at Audit)
+      const foldBy = piecewise ? Math.max(ease(clamp(morph * 1.5)), ease(clamp(form * 1.8))) : ease(clamp(form * 1.8));
+      const tip = e.fold ? { x: lerp(end.x, a.x, foldBy), y: lerp(end.y, a.y, foldBy) } : end;
       const lineAlpha = lerp(0.11, 0.24, morph) * fade * ambient * vis, lineW = lerp(0.8, 1, morph);
       if (e.gapAt >= 0 && !e.fold && end.t >= 1) {
         // a small break in the line (closes up as the lines fold into the stage)
@@ -510,7 +599,7 @@
 
     // Travelling light
     // network light keeps running as the dots travel, handing over to the stage light
-    const weight = { loose: fade * ambient, tree: morph * (1 - smooth(0.7, 0.84, p)), stage: on };
+    const weight = { loose: fade * ambient, tree: piecewise ? how : morph * (1 - smooth(0.7, 0.84, p)), stage: on };
     pulses = pulses.filter(pu => {
       let pl;
       if (pu.kind === 'loose') {
@@ -562,6 +651,7 @@
       ctx.fill();
     });
 
+    ctx.globalAlpha = 1;
     drawTrail();
   }
 
