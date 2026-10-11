@@ -238,6 +238,8 @@
     canvas.width = Math.round(W * dpr);
     canvas.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.lineCap = 'round';  // softer, more polished line ends and corners
+    ctx.lineJoin = 'round';
     if (!dots.length || wasDesktop !== desktop) buildNetwork();
   }
 
@@ -313,11 +315,11 @@
     if (kind === 'loose') {
       if (!looseEdges.length) return;
       pulses.push({ kind, edge: looseEdges[(Math.random() * looseEdges.length) | 0], rev: Math.random() < 0.5,
-        d: 0, speed: 150 + Math.random() * 80, tail: 90, fail: 0.35 + Math.random() * 0.3 });
+        d: 0, speed: 115 + Math.random() * 55, tail: 125, fail: 0.35 + Math.random() * 0.3 });
     } else if (kind === 'strand') {
       // a calm, orderly signal: one strand, left to right, end to end
       const path = strandPaths[nextStrand++ % strandPaths.length];
-      if (path && path.length > 1) pulses.push({ kind: 'tree', nodes: path, d: 0, speed: 170, tail: 80 });
+      if (path && path.length > 1) pulses.push({ kind: 'tree', nodes: path, d: 0, speed: 130, tail: 115 });
     } else if (kind === 'tree') {
       const path = randomWalk(treeAdj, (Math.random() * dots.length) | 0, 24);
       // stop at the first break along the way
@@ -327,11 +329,11 @@
         if (treeEdges[ei].gapAt >= 0) { stop = { from: path[j - 1], to: path[j], edge: ei }; path.length = j; break; }
       }
       if (path.length + (stop ? 1 : 0) < 3) return;
-      pulses.push({ kind, nodes: path, stop, d: 0, speed: 180 + Math.random() * 80, tail: 130 });
+      pulses.push({ kind, nodes: path, stop, d: 0, speed: 140 + Math.random() * 55, tail: 175 });
     } else {
       const path = randomWalk(stageAdj, (Math.random() * NS) | 0, 7);
       if (path.length < 2) return;
-      pulses.push({ kind, nodes: path, d: 0, speed: 120 + Math.random() * 50, tail: 70 });
+      pulses.push({ kind, nodes: path, d: 0, speed: 92 + Math.random() * 38, tail: 100 });
     }
   }
 
@@ -357,10 +359,17 @@
     const g = ctx.createLinearGradient(path[0][0], path[0][1], head[0], head[1]);
     g.addColorStop(0, rgba(AMBER, 0));
     g.addColorStop(1, rgba(AMBER, alpha));
-    ctx.strokeStyle = g;
-    ctx.lineWidth = 1.7;
     ctx.beginPath();
     path.forEach((q, i) => (i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])));
+    // a soft glow first, then the bright core on top
+    const halo = ctx.createLinearGradient(path[0][0], path[0][1], head[0], head[1]);
+    halo.addColorStop(0, rgba(AMBER, 0));
+    halo.addColorStop(1, rgba(AMBER, 0.16 * alpha));
+    ctx.strokeStyle = halo;
+    ctx.lineWidth = 7;
+    ctx.stroke();
+    ctx.strokeStyle = g;
+    ctx.lineWidth = 1.7;
     ctx.stroke();
     if (d <= L) glow(head[0], head[1], 11, 0.9 * alpha);
   }
@@ -507,13 +516,13 @@
 
     // Pulses
     if (!reduceMotion) {
-      if (Math.random() < dt * 2.2 * why * ambient) spawn('loose');
+      if (!piecewise && Math.random() < dt * 1.5 * why * ambient) spawn('loose'); // beside the steps, no light until Audit
       if (piecewise) {
         // beside the steps: signals go out at a steady rhythm, strand after strand, top to bottom
-        strandTimer += dt * how;
-        if (strandTimer > 0.42) { strandTimer = 0; spawn('strand'); }
-      } else if (Math.random() < dt * 1.8 * how) spawn('tree');
-      if (Math.random() < dt * 1.3 * on) spawn('stage');
+        strandTimer += dt * how * smooth(0.85, 1, morph); // light only once the outline has formed (Audit)
+        if (strandTimer > 0.62) { strandTimer = 0; spawn('strand'); }
+      } else if (Math.random() < dt * 1.2 * how) spawn('tree');
+      if (Math.random() < dt * 0.9 * on) spawn('stage');
     }
 
     // Silver lines
@@ -545,7 +554,8 @@
         line(a, tip, SILVER, lineAlpha, lineW);
       }
     });
-    STAGE_EDGES.forEach(([a, b]) => line(dots[a], dots[b], SILVER, 0.34 * Math.min(dots[a].f, dots[b].f)));
+    // the finished stage is drawn bolder than the fine network, so it feels solid when it arrives
+    STAGE_EDGES.forEach(([a, b]) => { const f = Math.min(dots[a].f, dots[b].f); line(dots[a], dots[b], SILVER, 0.34 * f, lerp(0.8, 1.5, f)); });
 
     ctx.globalCompositeOperation = 'lighter';
 
@@ -593,13 +603,13 @@
       if (f <= 0) return;
       const A = dots[a], B = dots[b];
       const end = { x: lerp(A.x, B.x, f), y: lerp(A.y, B.y, f) };
-      line(A, end, AMBER, 0.08, 4);
-      line(A, end, AMBER, 0.5, 1.1);
+      line(A, end, AMBER, 0.07, 8);   // soft glow
+      line(A, end, AMBER, 0.55, 1.6); // bolder lit outline
     });
 
     // Travelling light
     // network light keeps running as the dots travel, handing over to the stage light
-    const weight = { loose: fade * ambient, tree: piecewise ? how : morph * (1 - smooth(0.7, 0.84, p)), stage: on };
+    const weight = { loose: piecewise ? 0 : fade * ambient, tree: piecewise ? how : morph * (1 - smooth(0.7, 0.84, p)), stage: on };
     pulses = pulses.filter(pu => {
       let pl;
       if (pu.kind === 'loose') {
@@ -759,6 +769,7 @@
       const a = done * k;
       stroke(pts, rgba(SILVER, 0.1 * a), 1);              // faint track to the end
       ctx.globalCompositeOperation = 'lighter';
+      stroke(lit, rgba(AMBER, 0.06 * a), 7);              // soft glow along the travelled path
       stroke(lit, rgba(AMBER, 0.28 * a), 1.2);            // the path already travelled
       const g = ctx.createLinearGradient(0, headY - H * 0.3, 0, headY);
       g.addColorStop(0, rgba(AMBER, 0));
