@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>[COMPANY NAME]</title>
+  <meta name="description" content="[COMPANY NAME]: professional audio, lighting, video and livestream systems, designed, installed and maintained.">
+  <meta name="theme-color" content="#0e0e10">
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="stylesheet" href="css/style.css?v=42">
+</head>
+<!--
+  data-quote-button="on" shows a "Get a Quote" button beside the menu icon.
+  Leave "off" for hamburger-only navigation.
+-->
+<body data-quote-button="off">
+
+  <canvas id="network" aria-hidden="true"></canvas>
+
+  <!-- Navigation: hidden over the intro, fades in once it has been scrolled past -->
+  <nav class="nav" aria-label="Main">
+    <a class="nav-quote" href="#questionnaire">Get a Quote</a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
+      <span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="menu" id="menu" hidden>
+    <p class="menu-brand">[COMPANY NAME]</p>
+    <ul>
+      <li><a href="#process">Process</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#packages">Packages</a></li>
+      <li><a href="#questionnaire">Questionnaire</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+
+  <main>
+
+    <!-- 1. Intro: Why → How → What, synced to the network animation -->
+    <section id="intro" class="intro" aria-label="Introduction">
+      <div class="intro-sticky">
+        <h1 class="visually-hidden">[COMPANY NAME]</h1>
+        <div class="intro-lines">
+          <p class="intro-line"><span class="intro-beat">Why</span><span>Great moments demand flawless delivery.</span></p>
+          <p class="intro-line"><span class="intro-beat">How</span><span>Precision, made effortless.</span></p>
+          <p class="intro-line"><span class="intro-beat">What</span><span>We design &amp; install production systems.</span></p>
+        </div>
+        <!-- Scroll hint: fades away as soon as scrolling starts -->
+        <div class="scroll-hint" aria-hidden="true"><div class="scroll-hint-line"><span></span></div></div>
+      </div>
+    </section>
+
+    <!-- 2. Client process: markers are drawn on the canvas at each .step-marker -->
+    <section id="process" class="process">
+      <div class="process-inner">
+        <div class="process-stage-slot" aria-hidden="true"></div>
+        <div class="process-content">
+          <header class="section-head process-head reveal">
+            <p class="eyebrow">Process</p>
+            <h2>Five steps. One seamless handover.</h2>
+          </header>
+          <ol class="steps">
+            <li class="step">
+              <div class="step-body reveal">
+                <span class="step-marker" aria-hidden="true"></span>
+                <span class="step-num">01</span>
+                <h3 class="step-title">Questionnaire</h3>
+                <p class="step-line">Lead with your vision.</p>
+              </div>
+            </li>
+            <li class="step">
+              <div class="step-body reveal">
+                <span class="step-marker" aria-hidden="true"></span>
+                <span class="step-num">02</span>
+                <h3 class="step-title">Audit</h3>
+                <p class="step-line">We assess your room.</p>
+              </div>
+            </li>
+            <li class="step">
+              <div class="step-body reveal">
+                <span class="step-marker" aria-hidden="true"></span>
+                <span class="step-num">03</span>
+                <h3 class="step-title">Build</h3>
+                <p class="step-line">Designed for your room.</p>
+              </div>
+            </li>
+            <li class="step">
+              <div class="step-body reveal">
+                <span class="step-marker" aria-hidden="true"></span>
+                <span class="step-num">04</span>
+                <h3 class="step-title">Training</h3>
+                <p class="step-line">Anyone can run it.</p>
+              </div>
+            </li>
+            <li class="step">
+              <div class="step-body reveal">
+                <span class="step-marker" aria-hidden="true"></span>
+                <span class="step-num">05</span>
+                <h3 class="step-title">Running and maintained</h3>
+                <p class="step-line">It keeps working.</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Services -->
+    <section id="services" class="section">
+      <div class="container">
+        <header class="section-head reveal">
+          <p class="eyebrow">Services</p>
+          <h2>The full production, covered.</h2>
+        </header>
+        <div class="services reveal-group" style="--n:4">
+          <article class="card service" style="--d:0">
+            <span class="node" aria-hidden="true"></span>
+            <h3>Design and installation</h3>
+            <p>Built around your space.</p>
+          </article>
+          <article class="card service" style="--d:1">
+            <span class="node" aria-hidden="true"></span>
+            <h3>Upgrades</h3>
+            <p>Sharper sound, light and stream.</p>
+          </article>
+          <article class="card service" style="--d:2">
+            <span class="node" aria-hidden="true"></span>
+            <h3>Audit and problem solving</h3>
+            <p>We find it. We fix it.</p>
+          </article>
+          <article class="card service" style="--d:3">
+            <span class="node" aria-hidden="true"></span>
+            <h3>Training and maintenance</h3>
+            <p>Run with confidence, kept running.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Packages: four across on desktop, swipe carousel on mobile -->
+    <section id="packages" class="section">
+      <div class="container">
+        <header class="section-head reveal">
+          <p class="eyebrow">Packages</p>
+          <h2>Scaled to your ambition.</h2>
+        </header>
+      </div>
+      <div class="packages-wrap">
+        <div class="packages-track reveal-group" style="--n:4">
+          <article class="card package" style="--d:0">
+            <span class="node package-node" style="--i:0" aria-hidden="true"></span>
+            <h3 class="package-name">Small system</h3>
+            <p class="package-desc">Simple yet effective. Easy to assemble and disassemble.</p>
+            <dl class="package-meta">
+              <div><dt>Team size</dt><dd>Around 2 people</dd></div>
+              <div><dt>Includes</dt><dd>Full design, installation and training for your team. Maintenance available on request.</dd></div>
+            </dl>
+            <div class="package-cta">
+              <a class="btn" href="#questionnaire" data-package="Small system">Price on Request</a>
+              <span class="package-tailored">Tailored to you</span>
+            </div>
+          </article>
+          <article class="card package" style="--d:1">
+            <span class="node package-node" style="--i:1" aria-hidden="true"></span>
+            <h3 class="package-name">Medium system</h3>
+            <p class="package-desc">Effective and dynamic.</p>
+            <dl class="package-meta">
+              <div><dt>Team size</dt><dd>4 to 6 people</dd></div>
+              <div><dt>Includes</dt><dd>Full design, installation and training for your team, plus a maintenance package.</dd></div>
+            </dl>
+            <div class="package-cta">
+              <a class="btn" href="#questionnaire" data-package="Medium system">Price on Request</a>
+              <span class="package-tailored">Tailored to you</span>
+            </div>
+          </article>
+          <article class="card package" style="--d:2">
+            <span class="node package-node" style="--i:2" aria-hidden="true"></span>
+            <h3 class="package-name">Large system</h3>
+            <p class="package-desc">Dynamic and excellent.</p>
+            <dl class="package-meta">
+              <div><dt>Team size</dt><dd>6 to 8 people</dd></div>
+              <div><dt>Includes</dt><dd>Full design, installation and training for your team, plus a maintenance package.</dd></div>
+            </dl>
+            <div class="package-cta">
+              <a class="btn" href="#questionnaire" data-package="Large system">Price on Request</a>
+              <span class="package-tailored">Tailored to you</span>
+            </div>
+          </article>
+          <article class="card package" style="--d:3">
+            <span class="node package-node" style="--i:3" aria-hidden="true"></span>
+            <h3 class="package-name">Custom package</h3>
+            <p class="package-desc">Built to the size of your organisation.</p>
+            <dl class="package-meta">
+              <div><dt>Team size</dt><dd>No fixed team size</dd></div>
+              <div><dt>Includes</dt><dd>The full process: design, installation, training and a maintenance package.</dd></div>
+            </dl>
+            <div class="package-cta">
+              <a class="btn" href="#questionnaire" data-package="Custom package">Price on Request</a>
+              <span class="package-tailored">Tailored to you</span>
+            </div>
+          </article>
+        </div>
+        <div class="carousel-dots" role="tablist" aria-label="Packages">
+          <button type="button" role="tab" aria-label="Package 1" aria-selected="true"></button>
+          <button type="button" role="tab" aria-label="Package 2"></button>
+          <button type="button" role="tab" aria-label="Package 3"></button>
+          <button type="button" role="tab" aria-label="Package 4"></button>
+        </div>
+        <!-- Quiet "help me choose" link: opens the questionnaire with "Help me choose" selected -->
+        <p class="packages-help"><a href="#questionnaire" data-package="Help me choose">Not sure which fits? We'll help you choose&nbsp;›</a></p>
+      </div>
+    </section>
+
+    <!-- 5. Questionnaire. Replace [FORMSPREE_ENDPOINT] with your Formspree form URL (see README) -->
+    <section id="questionnaire" class="section">
+      <div class="container narrow reveal-group" style="--n:2">
+        <header class="section-head" style="--d:0">
+          <p class="eyebrow">Questionnaire</p>
+          <h2>Begin with the brief.</h2>
+        </header>
+
+        <form id="quote-form" class="card quote" style="--d:1" action="[FORMSPREE_ENDPOINT]" method="POST" novalidate>
+          <input type="hidden" name="_subject" value="New questionnaire: [COMPANY NAME] website">
+          <input type="hidden" name="path" value="">
+          <input type="hidden" name="package" value="">
+
+          <span class="node quote-node" aria-hidden="true"></span>
+
+          <div class="q-progress" aria-hidden="true"><span></span></div>
+
+          <!-- Package (required). Set by "Price on Request", or chosen here; tap to change. -->
+          <div class="q-package">
+            <button type="button" class="q-package-toggle" aria-expanded="true" aria-controls="q-package-options">
+              <span class="q-package-ask">Which package are you interested in?</span>
+              <span class="q-package-about">Enquiring about</span>
+              <strong></strong>
+              <span class="q-package-change">Change</span>
+            </button>
+            <div class="q-package-options" id="q-package-options" role="group" aria-label="Packages">
+              <button type="button" data-pick="Small system">Small system</button>
+              <button type="button" data-pick="Medium system">Medium system</button>
+              <button type="button" data-pick="Large system">Large system</button>
+              <button type="button" data-pick="Custom package">Custom package</button>
+              <button type="button" data-pick="Help me choose" data-pill="Help me choose">Help me choose</button>
+            </div>
+          </div>
+
+          <!-- Branch -->
+          <div class="q-screen is-active" data-path="branch">
+            <div class="q-branch">
+              <div class="q-choice">
+                <p class="q-label">Do you have a system already?</p>
+                <button type="button" class="btn btn-ghost" data-choose="existing">Have a system</button>
+              </div>
+              <div class="q-choice">
+                <p class="q-label">Are you starting fresh?</p>
+                <button type="button" class="btn btn-ghost" data-choose="new">Need a system</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Path A: existing system -->
+          <div class="q-screen" data-path="existing">
+            <label class="q-field">
+              <span class="q-label">What equipment are you using now?</span>
+              <textarea name="equipment" rows="3" required placeholder="Desk, speakers, lights, cameras…"></textarea>
+            </label>
+            <label class="q-field">
+              <span class="q-label">What issues or challenges are you running into?</span>
+              <textarea name="issues" rows="3" required></textarea>
+            </label>
+          </div>
+          <div class="q-screen" data-path="existing">
+            <fieldset class="q-field">
+              <legend class="q-label">How large is the team operating it?</legend>
+              <div class="options">
+                <label class="option"><input type="radio" name="team_size" value="1–2" required><span>1–2</span></label>
+                <label class="option"><input type="radio" name="team_size" value="3–5"><span>3–5</span></label>
+                <label class="option"><input type="radio" name="team_size" value="6–8"><span>6–8</span></label>
+                <label class="option"><input type="radio" name="team_size" value="9+"><span>9+</span></label>
+              </div>
+            </fieldset>
+            <fieldset class="q-field">
+              <legend class="q-label">When would you like the audit?</legend>
+              <div class="options">
+                <label class="option"><input type="radio" name="timeframe" value="Within a month" required><span>Within a month</span></label>
+                <label class="option"><input type="radio" name="timeframe" value="1–3 months"><span>1–3 months</span></label>
+                <label class="option"><input type="radio" name="timeframe" value="3–6 months"><span>3–6 months</span></label>
+                <label class="option"><input type="radio" name="timeframe" value="Flexible"><span>Flexible</span></label>
+              </div>
+            </fieldset>
+          </div>
+          <div class="q-screen" data-path="existing">
+            <fieldset class="q-field">
+              <legend class="q-label">Rough budget</legend>
+              <!-- PROVISIONAL: framing line not yet confirmed -->
+              <p class="q-note">Quality systems start from around £1,000.</p>
+              <div class="options options-stack">
+                <label class="option"><input type="radio" name="budget" value="£1,000 – £2,500" required><span>£1,000 – £2,500</span></label>
+                <label class="option"><input type="radio" name="budget" value="£2,500 – £5,000"><span>£2,500 – £5,000</span></label>
+                <label class="option"><input type="radio" name="budget" value="£5,000 – £10,000"><span>£5,000 – £10,000</span></label>
+                <label class="option"><input type="radio" name="budget" value="£10,000+"><span>£10,000+</span></label>
+              </div>
+            </fieldset>
+          </div>
+
+          <!-- Path B: new system -->
+          <div class="q-screen" data-path="new">
+            <label class="q-field">
+              <span class="q-label">What will the system be used for?</span>
+              <textarea name="purpose" rows="3" required placeholder="Services, events, concerts, streaming…"></textarea>
+            </label>
+            <label class="q-field">
+              <span class="q-label">Any specific requirements?</span>
+              <textarea name="requirements" rows="3" required></textarea>
+            </label>
+          </div>
+          <div class="q-screen" data-path="new">
+            <fieldset class="q-field">
+              <legend class="q-label">How large is the team that will operate it?</legend>
+              <div class="options">
+                <label class="option"><input type="radio" name="team_size" value="1–2" required><span>1–2</span></label>
+                <label class="option"><input type="radio" name="team_size" value="3–5"><span>3–5</span></label>
+                <label class="option"><input type="radio" name="team_size" value="6–8"><span>6–8</span></label>
+                <label class="option"><input type="radio" name="team_size" value="9+"><span>9+</span></label>
+              </div>
+            </fieldset>
+          </div>
+          <div class="q-screen" data-path="new">
+            <fieldset class="q-field">
+              <legend class="q-label">Rough budget</legend>
+              <!-- PROVISIONAL: framing line not yet confirmed -->
+              <p class="q-note">Quality systems start from around £1,000.</p>
+              <div class="options options-stack">
+                <label class="option"><input type="radio" name="budget" value="£1,000 – £2,500" required><span>£1,000 – £2,500</span></label>
+                <label class="option"><input type="radio" name="budget" value="£2,500 – £5,000"><span>£2,500 – £5,000</span></label>
+                <label class="option"><input type="radio" name="budget" value="£5,000 – £10,000"><span>£5,000 – £10,000</span></label>
+                <label class="option"><input type="radio" name="budget" value="£10,000+"><span>£10,000+</span></label>
+              </div>
+            </fieldset>
+            <fieldset class="q-field">
+              <legend class="q-label">What matters most: getting started simply, or a full professional setup?</legend>
+              <div class="options">
+                <label class="option"><input type="radio" name="priority" value="Getting started simply" required><span>Getting started simply</span></label>
+                <label class="option"><input type="radio" name="priority" value="Full professional setup"><span>Full professional setup</span></label>
+              </div>
+            </fieldset>
+          </div>
+
+          <!-- Contact details (both paths) -->
+          <div class="q-screen" data-path="both">
+            <p class="q-label">Where can we reach you?</p>
+            <div class="q-grid">
+              <label class="q-input"><span>Name</span><input type="text" name="name" autocomplete="name" required></label>
+              <label class="q-input"><span>Organisation</span><input type="text" name="organisation" autocomplete="organization"></label>
+              <label class="q-input"><span>Email</span><input type="email" name="email" autocomplete="email" required></label>
+              <label class="q-input"><span>Phone <em>(optional)</em></span><input type="tel" name="phone" autocomplete="tel"></label>
+            </div>
+          </div>
+
+          <!-- Done -->
+          <div class="q-screen q-done" data-path="done">
+            <p class="q-label">Thank you.</p>
+            <p class="q-note">Your answers are with us. We'll be in touch shortly.</p>
+          </div>
+
+          <p class="q-error" role="alert" hidden></p>
+
+          <div class="q-controls" hidden>
+            <button type="button" class="q-back">Back</button>
+            <button type="submit" class="btn q-next">Next</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- 6. Contact: a short enquiry form, sent to the same Formspree endpoint as the questionnaire -->
+    <section id="contact" class="section contact">
+      <div class="container contact-panel reveal-group" style="--n:2">
+        <header class="contact-head" style="--d:0">
+          <p class="eyebrow">Get in touch</p>
+          <h2>Your cue.</h2>
+          <!-- DRAFT copy -->
+          <p class="contact-sub">Say the word. We’ll set the stage.</p>
+        </header>
+
+        <form id="contact-form" class="contact-form" style="--d:1" action="[FORMSPREE_ENDPOINT]" method="POST" novalidate>
+          <input type="hidden" name="_subject" value="New enquiry: [COMPANY NAME] website">
+          <input type="hidden" name="form" value="Contact">
+
+          <!-- DRAFT: enquiry types to confirm -->
+          <fieldset class="roles">
+            <legend class="visually-hidden">I'm getting in touch as</legend>
+            <label class="option"><input type="radio" name="enquiry_type" value="Venue or organisation" checked><span>Venue or organisation</span></label>
+            <label class="option"><input type="radio" name="enquiry_type" value="Existing client"><span>Existing client</span></label>
+            <label class="option"><input type="radio" name="enquiry_type" value="Freelancer"><span>Freelancer</span></label>
+            <label class="option"><input type="radio" name="enquiry_type" value="Partner"><span>Partner</span></label>
+          </fieldset>
+
+          <div class="q-grid">
+            <label class="q-input"><span>Name</span><input type="text" name="name" autocomplete="name" placeholder="Your name" required></label>
+            <label class="q-input"><span>Email</span><input type="email" name="email" autocomplete="email" placeholder="you@organisation.com" required></label>
+          </div>
+          <label class="q-input"><span>Organisation</span><input type="text" name="organisation" autocomplete="organization" placeholder="Church, venue or company"></label>
+          <label class="q-input"><span>Message</span><textarea name="message" rows="4" placeholder="What do you have in mind?" required></textarea></label>
+
+          <button type="submit" class="btn contact-submit">Send message</button>
+          <p class="contact-note">Or email us at <a href="mailto:[EMAIL]">[EMAIL]</a></p>
+          <p class="q-error" role="alert" hidden></p>
+        </form>
+
+        <div class="contact-done" hidden>
+          <span class="contact-check" aria-hidden="true"></span>
+          <h3>Message received.</h3>
+          <p>Speak soon.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>&copy; <span data-year></span> [COMPANY NAME]</p>
+  </footer>
+
+  <script src="js/network.js?v=42"></script>
+  <script src="js/questionnaire.js?v=42"></script>
+  <script src="js/main.js?v=42"></script>
+</body>
+</html>
