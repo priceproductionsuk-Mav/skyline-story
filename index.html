@@ -1,693 +1,432 @@
 <!doctype html>
-<!--
-  Website: production systems company (pre-launch)
-  Single-file build: all HTML, CSS and JS are in this file.
-
-  BEFORE LAUNCH, edit the CONFIG object at the top of the <script> near the bottom:
-    - companyName  : replaces every "Company Name" placeholder on the page
-    - email        : contact address shown on the site and used as the form fallback
-    - formEndpoint : a form service URL (e.g. a Formspree endpoint). If left empty,
-                     questionnaire answers open in the visitor's email app instead.
-
-  Page order: Intro (Why / How / What + dots-and-lines stage animation, js/network.js)
-              → Client process → Services → Packages → Questionnaire → Contact
--->
-<html lang="en-GB" class="no-js">
+<html lang="en-GB">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Company Name · Production Systems</title>
-<meta name="description" content="Professional audio, lighting, video and livestream systems. Designed, installed, and engineered for effortless operation.">
-<meta name="theme-color" content="#050506">
-<style>
-  :root{
-    --bg:#050506;
-    --surface:#0c0d0f;
-    --surface-2:#131418;
-    --line:rgba(255,255,255,.09);
-    --line-strong:rgba(255,255,255,.2);
-    --text:#f3f3f5;
-    --muted:#9b9ea6;
-    --silver:#cfd2d8;
-    --amber:#ffb547;
-    --amber-glow:rgba(255,181,71,.35);
-    --radius:20px;
-    --gutter:16px;
-    --max:1180px;
-    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Inter,"Segoe UI",Roboto,Arial,sans-serif;
-  }
-  @media (min-width:768px){:root{--gutter:40px}}
-
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-  body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-  a{color:inherit}
-  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
-  :focus-visible{outline:2px solid var(--amber);outline-offset:3px}
-  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-
-  .wrap{width:100%;max-width:var(--max);margin:0 auto;padding:0 var(--gutter)}
-  section.block{padding:clamp(96px,14vw,180px) 0}
-  .eyebrow{font-size:.75rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
-  .section-title{font-size:clamp(2.1rem,5.2vw,3.75rem);font-weight:600;letter-spacing:-.025em;line-height:1.04;margin:.7rem 0 1rem}
-  .lede{color:var(--muted);font-size:clamp(1rem,1.5vw,1.2rem);max-width:38ch}
-
-  /* Reveal on scroll */
-  [data-reveal]{opacity:0;transform:translateY(24px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0s)}
-  [data-reveal].in{opacity:1;transform:none}
-  .no-js [data-reveal]{opacity:1;transform:none}
-
-  /* ---------- Navigation (hamburger only, hidden over the intro) ---------- */
-  .nav-toggle{position:fixed;top:max(16px,env(safe-area-inset-top));right:16px;z-index:60;width:48px;height:48px;border-radius:50%;
-    background:rgba(20,21,24,.6);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--line);
-    display:grid;place-items:center;opacity:0;pointer-events:none;transform:translateY(-8px);transition:opacity .5s,transform .5s}
-  .nav-toggle.show,.menu-open .nav-toggle{opacity:1;pointer-events:auto;transform:none}
-  .nav-toggle span,.nav-toggle span::before,.nav-toggle span::after{display:block;width:18px;height:1.5px;background:var(--text);transition:transform .3s,background .3s}
-  .nav-toggle span{position:relative}
-  .nav-toggle span::before,.nav-toggle span::after{content:"";position:absolute;left:0}
-  .nav-toggle span::before{top:-6px}
-  .nav-toggle span::after{top:6px}
-  .menu-open .nav-toggle span{background:transparent}
-  .menu-open .nav-toggle span::before{transform:translateY(6px) rotate(45deg)}
-  .menu-open .nav-toggle span::after{transform:translateY(-6px) rotate(-45deg)}
-  .menu{position:fixed;inset:0;z-index:50;background:rgba(5,5,6,.95);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
-    display:flex;flex-direction:column;justify-content:center;opacity:0;visibility:hidden;transition:opacity .4s,visibility .4s}
-  .menu-open .menu{opacity:1;visibility:visible}
-  .menu .brand{position:absolute;top:max(28px,env(safe-area-inset-top));left:var(--gutter);font-weight:600;letter-spacing:.02em}
-  .menu ul{list-style:none}
-  .menu a{display:inline-block;text-decoration:none;font-size:clamp(2.1rem,7vw,4rem);font-weight:600;letter-spacing:-.025em;padding:.2rem 0;color:var(--muted);transition:color .2s}
-  .menu a:hover,.menu a:focus-visible{color:var(--text)}
-
-  /* ---------- Network canvas (js/network.js): fixed behind everything ---------- */
-  #network{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
-  main,footer{position:relative;z-index:1}
-
-  /* ---------- Intro: Why / How / What over the network animation ---------- */
-  .intro{position:relative;height:600vh}
-  .intro-sticky{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden}
-  .intro-lines{position:absolute;inset:0;z-index:1;pointer-events:none}
-  .intro-line{position:absolute;left:50%;top:48%;width:min(22ch,calc(100% - 2 * var(--gutter)));margin:0;text-align:center;
-    font-size:clamp(1.9rem,5.4vw,4.3rem);font-weight:600;letter-spacing:-.03em;line-height:1.07;
-    text-shadow:0 0 28px rgba(5,5,6,.9),0 0 64px rgba(5,5,6,.75);transform:translate(-50%,-50%);opacity:0;will-change:opacity,transform}
-  .intro-line > span{display:block}
-  .intro-line:first-child{width:min(30ch,calc(100% - 2 * var(--gutter)))}
-  .intro-line:first-child > span{animation:intro-in 1.8s cubic-bezier(.22,.61,.36,1) .5s both}
-  .intro-line:first-child > span + span{animation-delay:.9s}
-  .no-js .intro-lines{position:static;padding:20vh var(--gutter) 0}
-  .no-js .intro-line{position:static;transform:none;width:auto;margin:0 auto .6em;opacity:1}
-  .scroll-hint{position:absolute;bottom:max(28px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);font-size:.7rem;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:12px;transition:opacity .4s}
-  .scroll-hint i{width:1px;height:36px;background:linear-gradient(var(--silver),transparent);animation:hint 2.2s ease-in-out infinite;transform-origin:top}
-  @keyframes hint{0%{transform:scaleY(0)}50%{transform:scaleY(1);opacity:1}100%{transform:scaleY(1);opacity:0}}
-  @keyframes intro-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-
-  /* ---------- Client process (markers drawn on the canvas at each .step-marker) ---------- */
-  #process{padding-bottom:clamp(64px,10vw,120px)}
-  .process-inner{max-width:var(--max);margin:0 auto;padding:0 var(--gutter)}
-  .process-stage-slot{display:none}
-  .process-steps{list-style:none;margin-top:56px}
-  .step{min-height:42vh;display:flex;align-items:center}
-  .step-body{position:relative;padding-left:46px}
-  .step-marker{position:absolute;left:7px;top:9px;width:10px;height:10px;transform:translate(-50%,-50%)}
-  .step-num{font-size:.75rem;letter-spacing:.2em;color:var(--muted)}
-  .step h3{font-size:clamp(1.6rem,3.6vw,2.6rem);font-weight:600;letter-spacing:-.025em;line-height:1.1;margin:.35rem 0 .55rem}
-  .step p{color:var(--muted);max-width:44ch}
-  @media (min-width:900px){
-    .process-inner{display:grid;grid-template-columns:1fr 1fr;gap:6vw}
-    .process-stage-slot{display:block}
-    .process-head{min-height:46vh;display:flex;flex-direction:column;justify-content:center}
-    .process-steps{margin-top:0}
-    .step{min-height:56vh}
-    .step-body{padding-left:64px}
-  }
-
-  /* ---------- Services ---------- */
-  .grid4{display:grid;gap:16px;margin-top:64px;grid-template-columns:1fr}
-  @media (min-width:700px){.grid4{grid-template-columns:repeat(2,1fr)}}
-  @media (min-width:1080px){.grid4{grid-template-columns:repeat(4,1fr)}}
-  .card{background:linear-gradient(180deg,var(--surface-2),var(--surface));border:1px solid var(--line);border-radius:var(--radius);padding:28px}
-  .motif{display:flex;align-items:center;margin-bottom:44px}
-  .motif i{width:6px;height:6px;border-radius:50%;background:var(--silver)}
-  .motif b{width:28px;height:1px;background:var(--line-strong)}
-  .motif i:last-child{transition:background .8s,box-shadow .8s}
-  .motif.is-lit i:last-child,.no-js .motif i:last-child{background:var(--amber);box-shadow:0 0 10px var(--amber-glow)}
-  .svc h3{font-size:1.15rem;font-weight:600;letter-spacing:-.01em;margin-bottom:.35rem}
-  .svc .sub{font-size:.8rem;color:var(--muted);margin-bottom:.9rem}
-  .svc p.jab{font-size:1.25rem;letter-spacing:-.01em;color:var(--silver);line-height:1.3}
-
-  /* ---------- Packages (swipe carousel on mobile, row on desktop) ---------- */
-  .pkg-track{position:relative;display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;margin:64px calc(var(--gutter) * -1) 0;
-    padding:0 var(--gutter) 8px;scroll-padding:0 var(--gutter);scrollbar-width:none;-webkit-overflow-scrolling:touch}
-  .pkg-track::-webkit-scrollbar{display:none}
-  .pkg{flex:0 0 84%;scroll-snap-align:start;display:flex;flex-direction:column}
-  @media (min-width:600px){.pkg{flex-basis:46%}}
-  @media (min-width:1080px){
-    .pkg-track{display:grid;grid-template-columns:repeat(4,1fr);overflow:visible;margin:64px 0 0;padding:0}
-    .pkg{flex:none}
-    .pkg-dots{display:none}
-  }
-  .pkg .num{font-size:.75rem;letter-spacing:.2em;color:var(--muted)}
-  .pkg h3{font-size:1.6rem;font-weight:600;letter-spacing:-.02em;margin:.5rem 0 .25rem}
-  .pkg .desc{color:var(--muted)}
-  .pkg .team{display:flex;justify-content:space-between;gap:12px;margin:22px 0;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:.9rem;color:var(--muted)}
-  .pkg .team strong{color:var(--text);font-weight:500}
-  .pkg ul{list-style:none;display:grid;gap:10px;margin-bottom:32px;flex:1;align-content:start}
-  .pkg li{display:flex;gap:10px;font-size:.95rem;color:var(--silver)}
-  .pkg li::before{content:"";flex:0 0 5px;height:5px;border-radius:50%;background:var(--amber);margin-top:.62em}
-  .pkg.custom{border-color:rgba(255,181,71,.3)}
-  .pkg .tailored{text-align:center;color:var(--muted);font-size:.85rem;margin-top:10px;white-space:nowrap}
-  .pkg-dots{display:flex;justify-content:center;gap:8px;margin-top:28px}
-  .pkg-dots button{width:7px;height:7px;padding:0;border-radius:4px;background:var(--line-strong);transition:background .3s,width .3s}
-  .pkg-dots button.on{background:var(--text);width:22px}
-
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 26px;border-radius:999px;font-weight:600;text-decoration:none;transition:transform .2s,background .2s,border-color .2s,opacity .2s}
-  .btn-primary{background:var(--text);color:#000}
-  .btn-primary:hover{background:#fff;transform:translateY(-1px)}
-  .btn-ghost{border:1px solid var(--line-strong);color:var(--text)}
-  .btn-ghost:hover{border-color:var(--silver)}
-  .btn[disabled]{opacity:.5;pointer-events:none}
-  .pkg .btn{width:100%}
-
-  /* ---------- Questionnaire ---------- */
-  .q{margin-top:64px;max-width:720px}
-  .branch{display:grid;gap:14px;grid-template-columns:1fr}
-  @media (min-width:700px){.branch{grid-template-columns:1fr 1fr}}
-  .branch button{text-align:left;padding:28px;border-radius:var(--radius);border:1px solid var(--line);background:linear-gradient(180deg,var(--surface-2),var(--surface));transition:border-color .3s,transform .3s}
-  .branch button:hover{border-color:var(--line-strong);transform:translateY(-2px)}
-  .branch strong{display:block;font-size:1.25rem;letter-spacing:-.01em;margin-bottom:6px}
-  .branch span{color:var(--muted)}
-  .branch.hidden,.qform[hidden],.q-done[hidden]{display:none}
-  .q-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;font-size:.85rem;color:var(--muted)}
-  .q-head button{color:var(--muted);text-decoration:underline;text-underline-offset:3px}
-  .progress{height:2px;background:var(--line);border-radius:2px;margin-bottom:44px;overflow:hidden}
-  .progress i{display:block;height:100%;width:0;background:var(--amber);transition:width .5s}
-  .qstep{display:none;border:0}
-  .qstep.current{display:block;animation:stepIn .5s cubic-bezier(.2,.7,.2,1)}
-  @keyframes stepIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-  .q-label{display:block;font-size:clamp(1.45rem,3.2vw,2.1rem);font-weight:600;letter-spacing:-.02em;line-height:1.15;margin-bottom:8px}
-  .q-note{color:var(--muted);margin-bottom:8px}
-  textarea,input[type=text],input[type=email],input[type=tel]{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;color:var(--text);font:inherit;font-size:16px;transition:border-color .2s;margin-top:16px}
-  textarea{min-height:150px;resize:vertical}
-  textarea:focus,input:focus{outline:none;border-color:var(--silver)}
-  ::placeholder{color:#5d6068}
-  .opts{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
-  .opt{position:relative}
-  .opt input{position:absolute;opacity:0;pointer-events:none}
-  .opt span{display:inline-flex;align-items:center;min-height:48px;padding:0 20px;border-radius:999px;border:1px solid var(--line-strong);transition:background .2s,color .2s,border-color .2s;cursor:pointer}
-  .opt span:hover{border-color:var(--silver)}
-  .opt input:checked + span{background:var(--text);color:#000;border-color:var(--text)}
-  .opt input:focus-visible + span{outline:2px solid var(--amber);outline-offset:3px}
-  .contact-fields{display:grid;gap:4px 12px}
-  @media (min-width:640px){.contact-fields{grid-template-columns:1fr 1fr}}
-  .field label{display:block;font-size:.85rem;color:var(--muted);margin-top:16px}
-  .field input{margin-top:6px}
-  .qnav{display:flex;gap:12px;align-items:center;margin-top:36px}
-  .qnav .back{color:var(--muted);min-height:48px;padding:0 10px}
-  .q-error{color:var(--amber);font-size:.9rem;margin-top:14px;min-height:1.3em}
-  .hp{position:absolute;left:-9999px}
-  .q-done h3{font-size:clamp(1.6rem,3.4vw,2.4rem);font-weight:600;letter-spacing:-.02em;margin-bottom:.5rem}
-  .q-done p{color:var(--muted);margin-bottom:28px;max-width:40ch}
-
-  /* ---------- Contact + footer ---------- */
-  .contact{text-align:center}
-  .contact .lede{margin:0 auto 36px}
-  .contact .actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
-  .contact .mail{display:block;margin-top:28px;color:var(--muted);text-decoration:none}
-  .contact .mail:hover{color:var(--text)}
-  footer{border-top:1px solid var(--line);padding:32px 0 max(32px,env(safe-area-inset-bottom));color:var(--muted);font-size:.85rem}
-  footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>[COMPANY NAME]</title>
+  <meta name="description" content="[COMPANY NAME]: professional audio, lighting, video and livestream systems, designed, installed and maintained.">
+  <meta name="theme-color" content="#0e0e10">
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="stylesheet" href="css/style.css?v=57">
 </head>
-<body>
+<!--
+  data-quote-button="on" shows a "Get a Quote" button beside the menu icon.
+  Leave "off" for hamburger-only navigation.
+-->
+<body data-quote-button="off">
 
-<canvas id="network" aria-hidden="true"></canvas>
-<a href="#process" class="sr-only">Skip the intro</a>
+  <canvas id="network" aria-hidden="true"></canvas>
 
-<!-- Navigation -->
-<button class="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="menu"><span></span></button>
-<nav class="menu" id="menu" aria-label="Main">
-  <div class="brand" data-company>Company Name</div>
-  <div class="wrap">
+  <!-- Navigation: hidden over the intro, fades in once it has been scrolled past -->
+  <nav class="nav" aria-label="Main">
+    <a class="nav-quote" href="#questionnaire">Get a Quote</a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
+      <span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="menu" id="menu" hidden>
+    <p class="menu-brand">[COMPANY NAME]</p>
     <ul>
       <li><a href="#process">Process</a></li>
       <li><a href="#services">Services</a></li>
       <li><a href="#packages">Packages</a></li>
-      <li><a href="#start">Get started</a></li>
+      <li><a href="#questionnaire">Questionnaire</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
   </div>
-</nav>
 
-<main>
-  <!-- 1. Intro: Why → How → What, synced to the network animation (js/network.js) -->
-  <section class="intro" id="intro" aria-label="Introduction">
-    <div class="intro-sticky">
-      <div class="intro-lines">
-        <p class="intro-line"><span>Every voice deserves to carry.</span><span>Every moment deserves to land.</span></p>
-        <p class="intro-line"><span>Engineered for effortless operation.</span></p>
-        <p class="intro-line"><span>Professional audio, lighting, video and livestream.</span></p>
-      </div>
-      <div class="scroll-hint" aria-hidden="true">Scroll<i></i></div>
-    </div>
-  </section>
+  <main>
 
-  <!-- 2. Client process: the stage rebuilds beside the steps (desktop); markers are drawn on the canvas -->
-  <section class="block" id="process">
-    <div class="process-inner">
-      <div class="process-stage-slot" aria-hidden="true"></div>
-      <div class="process-content">
-        <header class="process-head">
-          <div class="eyebrow" data-reveal>How we work</div>
-          <h2 class="section-title" data-reveal style="--d:.08s">Five steps. Nothing rushed.</h2>
-          <p class="lede" data-reveal style="--d:.16s">Every stage is deliberate, so nothing is missed and everything works on day one.</p>
-        </header>
-        <ol class="process-steps">
-        <li class="step">
-          <div class="step-body" data-reveal>
-            <span class="step-marker" aria-hidden="true"></span>
-            <div class="step-num">01</div>
-            <h3>Tell us what you need.</h3>
-            <p>A short questionnaire about your space, your team and your budget.</p>
-          </div>
-        </li>
-        <li class="step">
-          <div class="step-body" data-reveal>
-            <span class="step-marker" aria-hidden="true"></span>
-            <div class="step-num">02</div>
-            <h3>We see your space.</h3>
-            <p>We meet you on site to audit what you have, or assess what a new system needs.</p>
-          </div>
-        </li>
-        <li class="step">
-          <div class="step-body" data-reveal>
-            <span class="step-marker" aria-hidden="true"></span>
-            <div class="step-num">03</div>
-            <h3>Designed for your room.</h3>
-            <p>Our specialist crew designs and builds a system around your space.</p>
-          </div>
-        </li>
-        <li class="step">
-          <div class="step-body" data-reveal>
-            <span class="step-marker" aria-hidden="true"></span>
-            <div class="step-num">04</div>
-            <h3>Anyone can run it.</h3>
-            <p>We train your staff or volunteers until they run it with confidence.</p>
-          </div>
-        </li>
-        <li class="step">
-          <div class="step-body" data-reveal>
-            <span class="step-marker" aria-hidden="true"></span>
-            <div class="step-num">05</div>
-            <h3>It keeps working.</h3>
-            <p>Your system goes live, with ongoing maintenance to keep it that way.</p>
-          </div>
-        </li>
-        </ol>
-      </div>
-    </div>
-  </section>
-
-  <!-- 3. Services -->
-  <section class="block" id="services">
-    <div class="wrap">
-      <div class="eyebrow" data-reveal>Services</div>
-      <h2 class="section-title" data-reveal style="--d:.08s">What we do.</h2>
-      <div class="grid4">
-        <article class="card svc" data-reveal style="--d:0s">
-          <div class="motif" aria-hidden="true"><i></i><b></b><i></i></div>
-          <h3>Design &amp; Installation</h3>
-          <div class="sub">Production systems, start to finish</div>
-          <p class="jab">Built around your space.</p>
-        </article>
-        <article class="card svc" data-reveal style="--d:.08s">
-          <div class="motif" aria-hidden="true"><i></i><b></b><i></i></div>
-          <h3>Upgrades</h3>
-          <div class="sub">Audio, lighting, video and livestream</div>
-          <p class="jab">Sharper sound, light and stream.</p>
-        </article>
-        <article class="card svc" data-reveal style="--d:.16s">
-          <div class="motif" aria-hidden="true"><i></i><b></b><i></i></div>
-          <h3>Audit &amp; Problem Solving</h3>
-          <div class="sub">For existing systems</div>
-          <p class="jab">We find it. We fix it.</p>
-        </article>
-        <article class="card svc" data-reveal style="--d:.24s">
-          <div class="motif" aria-hidden="true"><i></i><b></b><i></i></div>
-          <h3>Training &amp; Maintenance</h3>
-          <div class="sub">For your staff and volunteers</div>
-          <p class="jab">Run with confidence, kept running.</p>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- 4. Packages -->
-  <section class="block" id="packages">
-    <div class="wrap">
-      <div class="eyebrow" data-reveal>Packages</div>
-      <h2 class="section-title" data-reveal style="--d:.08s">Sized to your team.</h2>
-
-      <div class="pkg-track" id="pkgTrack">
-        <article class="card pkg" data-reveal style="--d:0s">
-          <div class="num">01</div>
-          <h3>Small</h3>
-          <p class="desc">Simple yet effective.</p>
-          <div class="team"><span>Team</span><strong>Around 2 people</strong></div>
-          <ul>
-            <li>System design</li>
-            <li>Full installation</li>
-            <li>Training for your team</li>
-            <li>Easy to set up and pack down</li>
-            <li>Maintenance on request</li>
-          </ul>
-          <a class="btn btn-primary" href="#start">Price on Request</a>
-          <div class="tailored">Tailored to you</div>
-        </article>
-        <article class="card pkg" data-reveal style="--d:.08s">
-          <div class="num">02</div>
-          <h3>Medium</h3>
-          <p class="desc">Effective and dynamic.</p>
-          <div class="team"><span>Team</span><strong>4 to 6 people</strong></div>
-          <ul>
-            <li>System design</li>
-            <li>Full installation</li>
-            <li>Training for your team</li>
-            <li>Maintenance package included</li>
-          </ul>
-          <a class="btn btn-primary" href="#start">Price on Request</a>
-          <div class="tailored">Tailored to you</div>
-        </article>
-        <article class="card pkg" data-reveal style="--d:.16s">
-          <div class="num">03</div>
-          <h3>Large</h3>
-          <p class="desc">Dynamic and excellent.</p>
-          <div class="team"><span>Team</span><strong>6 to 8 people</strong></div>
-          <ul>
-            <li>System design</li>
-            <li>Full installation</li>
-            <li>Training for your team</li>
-            <li>Maintenance package included</li>
-          </ul>
-          <a class="btn btn-primary" href="#start">Price on Request</a>
-          <div class="tailored">Tailored to you</div>
-        </article>
-        <article class="card pkg custom" data-reveal style="--d:.24s">
-          <div class="num">04</div>
-          <h3>Custom</h3>
-          <p class="desc">Built to the size of your organisation.</p>
-          <div class="team"><span>Team</span><strong>Any size</strong></div>
-          <ul>
-            <li>The full process, start to finish</li>
-            <li>System design and installation</li>
-            <li>Training for your team</li>
-            <li>Maintenance package included</li>
-          </ul>
-          <a class="btn btn-primary" href="#start">Price on Request</a>
-          <div class="tailored">Tailored to you</div>
-        </article>
-      </div>
-      <div class="pkg-dots" id="pkgDots" aria-label="Choose a package"></div>
-    </div>
-  </section>
-
-  <!-- 5. Questionnaire -->
-  <section class="block" id="start">
-    <div class="wrap">
-      <div class="eyebrow" data-reveal>Get started</div>
-      <h2 class="section-title" data-reveal style="--d:.08s">Let’s begin.</h2>
-      <p class="lede" data-reveal style="--d:.16s">A few quick questions. Tell us where you’re starting from.</p>
-
-      <div class="q">
-        <div class="branch" id="branch" data-reveal style="--d:.2s">
-          <button type="button" data-flow="existing">
-            <strong>I have a system</strong>
-            <span>Audit what you have and fix what isn’t working.</span>
-          </button>
-          <button type="button" data-flow="new">
-            <strong>I need a new system</strong>
-            <span>Design and build a system from the ground up.</span>
-          </button>
+    <!-- 1. Intro: Why → How → What, synced to the network animation -->
+    <section id="intro" class="intro" aria-label="Introduction">
+      <div class="intro-sticky">
+        <h1 class="visually-hidden">[COMPANY NAME]</h1>
+        <div class="intro-lines">
+          <p class="intro-line"><span class="intro-beat">Why</span><span>Great moments demand flawless delivery.</span></p>
+          <p class="intro-line"><span class="intro-beat">How</span><span>Precision, made effortless.</span></p>
+          <p class="intro-line"><span class="intro-beat">What</span><span>We design &amp; install production systems.</span></p>
         </div>
+        <!-- Scroll hint: fades away as soon as scrolling starts -->
+        <div class="scroll-hint" aria-hidden="true"><div class="scroll-hint-line"><span></span></div></div>
+      </div>
+    </section>
 
-        <form class="qform" id="qform" hidden novalidate>
-          <div class="q-head"><span id="qTitle"></span><button type="button" id="qChange">Change</button></div>
-          <div class="progress" aria-hidden="true"><i id="qBar"></i></div>
-          <div id="qSteps"></div>
-          <input class="hp" type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <div class="q-error" id="qError" role="alert"></div>
-          <div class="qnav">
-            <button type="button" class="back" id="qBack">Back</button>
-            <button type="button" class="btn btn-primary" id="qNext">Next</button>
+    <!-- 2. Client process: markers are drawn on the canvas at each .step-marker -->
+    <section id="process" class="process">
+      <div class="process-inner">
+        <div class="process-stage-slot" aria-hidden="true"></div>
+        <div class="process-content">
+          <header class="section-head process-head reveal">
+            <p class="eyebrow">Process</p>
+            <h2>Five steps. One seamless handover.</h2>
+          </header>
+          <ol class="steps">
+            <li class="step">
+              <div class="step-body reveal">
+                <span class="step-marker" aria-hidden="true"></span>
+                <span class="step-num">01</span>
+                <h3 class="step-title">Questionnaire</h3>
+                <p class="step-line">Lead with your vision.</p>
+              </div>
+            </li>
+            <li class="step">
+              <div class="step-body reveal">
+                <span class="step-marker" aria-hidden="true"></span>
+                <span class="step-num">02</span>
+                <h3 class="step-title">Audit</h3>
+                <p class="step-line">We assess your room.</p>
+              </div>
+            </li>
+            <li class="step">
+              <div class="step-body reveal">
+                <span class="step-marker" aria-hidden="true"></span>
+                <span class="step-num">03</span>
+                <h3 class="step-title">Build</h3>
+                <p class="step-line">Designed for your room.</p>
+              </div>
+            </li>
+            <li class="step">
+              <div class="step-body reveal">
+                <span class="step-marker" aria-hidden="true"></span>
+                <span class="step-num">04</span>
+                <h3 class="step-title">Training</h3>
+                <p class="step-line">Anyone can run it.</p>
+              </div>
+            </li>
+            <li class="step">
+              <div class="step-body reveal">
+                <span class="step-marker" aria-hidden="true"></span>
+                <span class="step-num">05</span>
+                <h3 class="step-title">Running and maintained</h3>
+                <p class="step-line">It keeps working.</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Services -->
+    <section id="services" class="section">
+      <div class="container">
+        <header class="section-head reveal">
+          <p class="eyebrow">Services</p>
+          <h2>The full production, covered.</h2>
+        </header>
+        <div class="services reveal-group" style="--n:4">
+          <article class="card service" style="--d:0">
+            <span class="node" aria-hidden="true"></span>
+            <h3>Design and installation</h3>
+            <p>Built around your space.</p>
+          </article>
+          <article class="card service" style="--d:1">
+            <span class="node" aria-hidden="true"></span>
+            <h3>Upgrades</h3>
+            <p>Sharper sound, light and stream.</p>
+          </article>
+          <article class="card service" style="--d:2">
+            <span class="node" aria-hidden="true"></span>
+            <h3>Audit and problem solving</h3>
+            <p>We find it. We fix it.</p>
+          </article>
+          <article class="card service" style="--d:3">
+            <span class="node" aria-hidden="true"></span>
+            <h3>Training and maintenance</h3>
+            <p>Run with confidence, kept running.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Packages: four across on desktop, swipe carousel on mobile -->
+    <section id="packages" class="section">
+      <div class="container">
+        <header class="section-head reveal">
+          <p class="eyebrow">Packages</p>
+          <h2>Scaled to your ambition.</h2>
+        </header>
+      </div>
+      <div class="packages-wrap">
+        <div class="packages-track reveal-group" style="--n:4">
+          <article class="card package" style="--d:0">
+            <span class="node package-node" style="--i:0" aria-hidden="true"></span>
+            <h3 class="package-name">Small system</h3>
+            <p class="package-desc">Simple yet effective. Easy to assemble and disassemble.</p>
+            <dl class="package-meta">
+              <div><dt>Team size</dt><dd>Around 2 people</dd></div>
+              <div><dt>Includes</dt><dd>Full design, installation and training for your team. Maintenance available on request.</dd></div>
+            </dl>
+            <div class="package-cta">
+              <a class="btn" href="#questionnaire" data-package="Small system">Price on Request</a>
+              <span class="package-tailored">Tailored to you</span>
+            </div>
+          </article>
+          <article class="card package" style="--d:1">
+            <span class="node package-node" style="--i:1" aria-hidden="true"></span>
+            <h3 class="package-name">Medium system</h3>
+            <p class="package-desc">Effective and dynamic.</p>
+            <dl class="package-meta">
+              <div><dt>Team size</dt><dd>4 to 6 people</dd></div>
+              <div><dt>Includes</dt><dd>Full design, installation and training for your team, plus a maintenance package.</dd></div>
+            </dl>
+            <div class="package-cta">
+              <a class="btn" href="#questionnaire" data-package="Medium system">Price on Request</a>
+              <span class="package-tailored">Tailored to you</span>
+            </div>
+          </article>
+          <article class="card package" style="--d:2">
+            <span class="node package-node" style="--i:2" aria-hidden="true"></span>
+            <h3 class="package-name">Large system</h3>
+            <p class="package-desc">Dynamic and excellent.</p>
+            <dl class="package-meta">
+              <div><dt>Team size</dt><dd>6 to 8 people</dd></div>
+              <div><dt>Includes</dt><dd>Full design, installation and training for your team, plus a maintenance package.</dd></div>
+            </dl>
+            <div class="package-cta">
+              <a class="btn" href="#questionnaire" data-package="Large system">Price on Request</a>
+              <span class="package-tailored">Tailored to you</span>
+            </div>
+          </article>
+          <article class="card package" style="--d:3">
+            <span class="node package-node" style="--i:3" aria-hidden="true"></span>
+            <h3 class="package-name">Custom package</h3>
+            <p class="package-desc">Built to the size of your organisation.</p>
+            <dl class="package-meta">
+              <div><dt>Team size</dt><dd>No fixed team size</dd></div>
+              <div><dt>Includes</dt><dd>The full process: design, installation, training and a maintenance package.</dd></div>
+            </dl>
+            <div class="package-cta">
+              <a class="btn" href="#questionnaire" data-package="Custom package">Price on Request</a>
+              <span class="package-tailored">Tailored to you</span>
+            </div>
+          </article>
+        </div>
+        <div class="carousel-dots" role="tablist" aria-label="Packages">
+          <button type="button" role="tab" aria-label="Package 1" aria-selected="true"></button>
+          <button type="button" role="tab" aria-label="Package 2"></button>
+          <button type="button" role="tab" aria-label="Package 3"></button>
+          <button type="button" role="tab" aria-label="Package 4"></button>
+        </div>
+        <!-- Quiet "help me choose" link: opens the questionnaire with "Help me choose" selected -->
+        <p class="packages-help"><a href="#questionnaire" data-package="Help me choose">Not sure which fits? We'll help you choose&nbsp;›</a></p>
+      </div>
+    </section>
+
+    <!-- 5. Questionnaire. Replace [FORMSPREE_ENDPOINT] with your Formspree form URL (see README) -->
+    <section id="questionnaire" class="section">
+      <div class="container narrow reveal-group" style="--n:2">
+        <header class="section-head" style="--d:0">
+          <p class="eyebrow">Questionnaire</p>
+          <h2>Begin with the brief.</h2>
+        </header>
+
+        <form id="quote-form" class="card quote" style="--d:1" action="[FORMSPREE_ENDPOINT]" method="POST" novalidate>
+          <input type="hidden" name="_subject" value="New questionnaire: [COMPANY NAME] website">
+          <input type="hidden" name="path" value="">
+          <input type="hidden" name="package" value="">
+
+          <span class="node quote-node" aria-hidden="true"></span>
+
+          <div class="q-progress" aria-hidden="true"><span></span></div>
+
+          <!-- Package (required). Set by "Price on Request", or chosen here; tap to change. -->
+          <div class="q-package">
+            <button type="button" class="q-package-toggle" aria-expanded="true" aria-controls="q-package-options">
+              <span class="q-package-ask">Which package are you interested in?</span>
+              <span class="q-package-about">Enquiring about</span>
+              <strong></strong>
+              <span class="q-package-change">Change</span>
+            </button>
+            <div class="q-package-options" id="q-package-options" role="group" aria-label="Packages">
+              <button type="button" data-pick="Small system">Small system</button>
+              <button type="button" data-pick="Medium system">Medium system</button>
+              <button type="button" data-pick="Large system">Large system</button>
+              <button type="button" data-pick="Custom package">Custom package</button>
+              <button type="button" data-pick="Help me choose" data-pill="Help me choose">Help me choose</button>
+            </div>
+          </div>
+
+          <!-- Branch -->
+          <div class="q-screen is-active" data-path="branch">
+            <div class="q-branch">
+              <div class="q-choice">
+                <p class="q-label">Do you have a system already?</p>
+                <button type="button" class="btn btn-ghost" data-choose="existing">Have a system</button>
+              </div>
+              <div class="q-choice">
+                <p class="q-label">Are you starting fresh?</p>
+                <button type="button" class="btn btn-ghost" data-choose="new">Need a system</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Path A: existing system -->
+          <div class="q-screen" data-path="existing">
+            <label class="q-field">
+              <span class="q-label">What equipment are you using now?</span>
+              <textarea name="equipment" rows="3" required placeholder="Desk, speakers, lights, cameras…"></textarea>
+            </label>
+            <label class="q-field">
+              <span class="q-label">What issues or challenges are you running into?</span>
+              <textarea name="issues" rows="3" required></textarea>
+            </label>
+          </div>
+          <div class="q-screen" data-path="existing">
+            <fieldset class="q-field">
+              <legend class="q-label">How large is the team operating it?</legend>
+              <div class="options">
+                <label class="option"><input type="radio" name="team_size" value="1–2" required><span>1–2</span></label>
+                <label class="option"><input type="radio" name="team_size" value="3–5"><span>3–5</span></label>
+                <label class="option"><input type="radio" name="team_size" value="6–8"><span>6–8</span></label>
+                <label class="option"><input type="radio" name="team_size" value="9+"><span>9+</span></label>
+              </div>
+            </fieldset>
+            <fieldset class="q-field">
+              <legend class="q-label">When would you like the audit?</legend>
+              <div class="options">
+                <label class="option"><input type="radio" name="timeframe" value="Within a month" required><span>Within a month</span></label>
+                <label class="option"><input type="radio" name="timeframe" value="1–3 months"><span>1–3 months</span></label>
+                <label class="option"><input type="radio" name="timeframe" value="3–6 months"><span>3–6 months</span></label>
+                <label class="option"><input type="radio" name="timeframe" value="Flexible"><span>Flexible</span></label>
+              </div>
+            </fieldset>
+          </div>
+          <div class="q-screen" data-path="existing">
+            <fieldset class="q-field">
+              <legend class="q-label">Rough budget</legend>
+              <!-- PROVISIONAL: framing line not yet confirmed -->
+              <p class="q-note">Quality systems start from around £1,000.</p>
+              <div class="options options-stack">
+                <label class="option"><input type="radio" name="budget" value="£1,000 – £2,500" required><span>£1,000 – £2,500</span></label>
+                <label class="option"><input type="radio" name="budget" value="£2,500 – £5,000"><span>£2,500 – £5,000</span></label>
+                <label class="option"><input type="radio" name="budget" value="£5,000 – £10,000"><span>£5,000 – £10,000</span></label>
+                <label class="option"><input type="radio" name="budget" value="£10,000+"><span>£10,000+</span></label>
+              </div>
+            </fieldset>
+          </div>
+
+          <!-- Path B: new system -->
+          <div class="q-screen" data-path="new">
+            <label class="q-field">
+              <span class="q-label">What will the system be used for?</span>
+              <textarea name="purpose" rows="3" required placeholder="Services, events, concerts, streaming…"></textarea>
+            </label>
+            <label class="q-field">
+              <span class="q-label">Any specific requirements?</span>
+              <textarea name="requirements" rows="3" required></textarea>
+            </label>
+          </div>
+          <div class="q-screen" data-path="new">
+            <fieldset class="q-field">
+              <legend class="q-label">How large is the team that will operate it?</legend>
+              <div class="options">
+                <label class="option"><input type="radio" name="team_size" value="1–2" required><span>1–2</span></label>
+                <label class="option"><input type="radio" name="team_size" value="3–5"><span>3–5</span></label>
+                <label class="option"><input type="radio" name="team_size" value="6–8"><span>6–8</span></label>
+                <label class="option"><input type="radio" name="team_size" value="9+"><span>9+</span></label>
+              </div>
+            </fieldset>
+          </div>
+          <div class="q-screen" data-path="new">
+            <fieldset class="q-field">
+              <legend class="q-label">Rough budget</legend>
+              <!-- PROVISIONAL: framing line not yet confirmed -->
+              <p class="q-note">Quality systems start from around £1,000.</p>
+              <div class="options options-stack">
+                <label class="option"><input type="radio" name="budget" value="£1,000 – £2,500" required><span>£1,000 – £2,500</span></label>
+                <label class="option"><input type="radio" name="budget" value="£2,500 – £5,000"><span>£2,500 – £5,000</span></label>
+                <label class="option"><input type="radio" name="budget" value="£5,000 – £10,000"><span>£5,000 – £10,000</span></label>
+                <label class="option"><input type="radio" name="budget" value="£10,000+"><span>£10,000+</span></label>
+              </div>
+            </fieldset>
+            <fieldset class="q-field">
+              <legend class="q-label">What matters most: getting started simply, or a full professional setup?</legend>
+              <div class="options">
+                <label class="option"><input type="radio" name="priority" value="Getting started simply" required><span>Getting started simply</span></label>
+                <label class="option"><input type="radio" name="priority" value="Full professional setup"><span>Full professional setup</span></label>
+              </div>
+            </fieldset>
+          </div>
+
+          <!-- Contact details (both paths) -->
+          <div class="q-screen" data-path="both">
+            <p class="q-label">Where can we reach you?</p>
+            <div class="q-grid">
+              <label class="q-input"><span>Name</span><input type="text" name="name" autocomplete="name" required></label>
+              <label class="q-input"><span>Organisation</span><input type="text" name="organisation" autocomplete="organization"></label>
+              <label class="q-input"><span>Email</span><input type="email" name="email" autocomplete="email" required></label>
+              <label class="q-input"><span>Phone <em>(optional)</em></span><input type="tel" name="phone" autocomplete="tel"></label>
+            </div>
+          </div>
+
+          <!-- Done -->
+          <div class="q-screen q-done" data-path="done">
+            <p class="q-label">Thank you.</p>
+            <p class="q-note">Your answers are with us. We'll be in touch shortly.</p>
+          </div>
+
+          <p class="q-error" role="alert" hidden></p>
+
+          <div class="q-controls" hidden>
+            <button type="button" class="q-back">Back</button>
+            <button type="submit" class="btn q-next">Next</button>
           </div>
         </form>
+      </div>
+    </section>
 
-        <div class="q-done" id="qDone" hidden>
-          <h3>Thank you.</h3>
-          <p>We’ll review your answers and be in touch to arrange a meeting.</p>
-          <button type="button" class="btn btn-ghost" id="qRestart">Start again</button>
+    <!-- 6. Contact: a short enquiry form, sent to the same Formspree endpoint as the questionnaire -->
+    <section id="contact" class="section contact">
+      <div class="container contact-panel reveal-group" style="--n:2">
+        <header class="contact-head" style="--d:0">
+          <p class="eyebrow">Get in touch</p>
+          <h2>Your cue.</h2>
+          <!-- DRAFT copy -->
+          <p class="contact-sub">Say the word. We’ll set the stage.</p>
+        </header>
+
+        <form id="contact-form" class="contact-form" style="--d:1" action="[FORMSPREE_ENDPOINT]" method="POST" novalidate>
+          <input type="hidden" name="_subject" value="New enquiry: [COMPANY NAME] website">
+          <input type="hidden" name="form" value="Contact">
+
+          <!-- DRAFT: enquiry types to confirm -->
+          <fieldset class="roles">
+            <legend class="visually-hidden">I'm getting in touch as</legend>
+            <label class="option"><input type="radio" name="enquiry_type" value="Venue or organisation" checked><span>Venue or organisation</span></label>
+            <label class="option"><input type="radio" name="enquiry_type" value="Existing client"><span>Existing client</span></label>
+            <label class="option"><input type="radio" name="enquiry_type" value="Freelancer"><span>Freelancer</span></label>
+            <label class="option"><input type="radio" name="enquiry_type" value="Partner"><span>Partner</span></label>
+          </fieldset>
+
+          <div class="q-grid">
+            <label class="q-input"><span>Name</span><input type="text" name="name" autocomplete="name" placeholder="Your name" required></label>
+            <label class="q-input"><span>Email</span><input type="email" name="email" autocomplete="email" placeholder="you@organisation.com" required></label>
+          </div>
+          <label class="q-input"><span>Organisation</span><input type="text" name="organisation" autocomplete="organization" placeholder="Church, venue or company"></label>
+          <label class="q-input"><span>Message</span><textarea name="message" rows="4" placeholder="What do you have in mind?" required></textarea></label>
+
+          <button type="submit" class="btn contact-submit">Send message</button>
+          <p class="contact-note">Or email us at <a href="mailto:[EMAIL]">[EMAIL]</a></p>
+          <p class="q-error" role="alert" hidden></p>
+        </form>
+
+        <div class="contact-done" hidden>
+          <span class="contact-check" aria-hidden="true"></span>
+          <h3>Message received.</h3>
+          <p>Speak soon.</p>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- 6. Contact -->
-  <section class="block contact" id="contact">
-    <div class="wrap">
-      <div class="eyebrow" data-reveal>Contact</div>
-      <h2 class="section-title" data-reveal style="--d:.08s">Let’s talk.</h2>
-      <p class="lede" data-reveal style="--d:.16s">Prefer a conversation? We’d love to hear about your space.</p>
-      <div class="actions" data-reveal style="--d:.24s">
-        <a class="btn btn-primary" href="#start">Start the questionnaire</a>
-        <a class="btn btn-ghost" data-email-link href="#">Email us</a>
-      </div>
-      <a class="mail" data-email data-reveal style="--d:.3s" href="#">hello@yourdomain.com</a>
-    </div>
-  </section>
-</main>
+  </main>
 
-<footer>
-  <div class="wrap">
-    <span>© <span data-year></span> <span data-company>Company Name</span></span>
-    <span>Audio · Lighting · Video · Livestream</span>
-  </div>
-</footer>
+  <footer class="footer">
+    <p>&copy; <span data-year></span> [COMPANY NAME]</p>
+  </footer>
 
-<script>
-(function () {
-  'use strict';
-
-  /* ======================= CONFIG: edit before launch ======================= */
-  var CONFIG = {
-    companyName: 'Company Name',
-    email: 'hello@yourdomain.com',
-    formEndpoint: '' // e.g. 'https://formspree.io/f/xxxxxxx'
-  };
-  /* ========================================================================== */
-
-  var root = document.documentElement;
-  root.classList.remove('no-js');
-
-  document.querySelectorAll('[data-company]').forEach(function (el) { el.textContent = CONFIG.companyName; });
-  document.title = CONFIG.companyName + ' · Production Systems';
-  document.querySelectorAll('[data-email]').forEach(function (el) { el.textContent = CONFIG.email; el.href = 'mailto:' + CONFIG.email; });
-  document.querySelectorAll('[data-email-link]').forEach(function (el) { el.href = 'mailto:' + CONFIG.email; });
-  document.querySelectorAll('[data-year]').forEach(function (el) { el.textContent = new Date().getFullYear(); });
-
-  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function clamp(v, a, b) { a = a === undefined ? 0 : a; b = b === undefined ? 1 : b; return Math.min(b, Math.max(a, v)); }
-  function ease(t) { return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
-  function lerp(a, b, t) { return a + (b - a) * t; }
-  function range(p, a, b) { return clamp((p - a) / (b - a)); }
-
-  /* ---------------- Nav: hidden over the intro (the animation itself is js/network.js) ---------------- */
-  var intro = document.getElementById('intro');
-  var toggle = document.querySelector('.nav-toggle');
-  function navCheck() { toggle.classList.toggle('show', intro.getBoundingClientRect().bottom < innerHeight * .5); }
-  addEventListener('scroll', navCheck, { passive: true });
-  addEventListener('resize', navCheck);
-  navCheck();
-
-  /* ---------------- Menu ---------------- */
-  function setMenu(open) {
-    document.body.classList.toggle('menu-open', open);
-    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
-  }
-  toggle.addEventListener('click', function () { setMenu(!document.body.classList.contains('menu-open')); });
-  document.querySelectorAll('.menu a').forEach(function (a) { a.addEventListener('click', function () { setMenu(false); }); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
-
-  /* ---------------- Reveal on scroll ---------------- */
-  if ('IntersectionObserver' in window) {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
-    }, { threshold: .15 });
-    document.querySelectorAll('[data-reveal]').forEach(function (el) { io.observe(el); });
-  } else {
-    document.querySelectorAll('[data-reveal]').forEach(function (el) { el.classList.add('in'); });
-  }
-
-  /* ---------------- Package carousel dots (mobile) ---------------- */
-  var track = document.getElementById('pkgTrack'), dotsWrap = document.getElementById('pkgDots');
-  var cards = Array.prototype.slice.call(track.querySelectorAll('.pkg'));
-  var pdots = cards.map(function (c, j) {
-    var b = document.createElement('button');
-    b.type = 'button';
-    b.setAttribute('aria-label', 'Package ' + (j + 1));
-    b.addEventListener('click', function () {
-      track.scrollTo({ left: c.offsetLeft - parseFloat(getComputedStyle(track).paddingLeft), behavior: reduce ? 'auto' : 'smooth' });
-    });
-    dotsWrap.appendChild(b);
-    return b;
-  });
-  function updateDots() {
-    var pad = parseFloat(getComputedStyle(track).paddingLeft), best = 0, bestD = Infinity;
-    cards.forEach(function (c, j) { var d = Math.abs(c.offsetLeft - pad - track.scrollLeft); if (d < bestD) { bestD = d; best = j; } });
-    pdots.forEach(function (b, j) { b.classList.toggle('on', j === best); });
-  }
-  track.addEventListener('scroll', updateDots, { passive: true });
-  updateDots();
-
-  /* ---------------- Questionnaire ---------------- */
-  var BUDGET = ['£1,000 – £2,500', '£2,500 – £5,000', '£5,000 – £10,000', '£10,000+'];
-  var TEAM = ['1–2 people', '3–5 people', '6–8 people', '9+ people'];
-  var PRIORITY = ['Getting started simply', 'A full professional setup'];
-  var budgetStep = { name: 'Budget', type: 'choice', label: 'What’s your rough budget?', note: 'Quality systems start from around £1,000.', options: BUDGET };
-  var priorityStep = { name: 'Priority', type: 'choice', label: 'What matters most?', options: PRIORITY };
-  var contactStep = { type: 'contact', label: 'Where can we reach you?', note: 'We’ll be in touch to arrange a meeting.' };
-
-  var FLOWS = {
-    existing: {
-      title: 'Existing system audit',
-      steps: [
-        { name: 'Current equipment', type: 'text', label: 'What equipment are you using now?', placeholder: 'Sound desk, speakers, cameras, lighting, streaming kit…' },
-        { name: 'Issues', type: 'text', label: 'What isn’t working as it should?', placeholder: 'Feedback, dropouts, poor stream quality, hard to operate…' },
-        { name: 'Team size', type: 'choice', label: 'How many people run it?', options: TEAM },
-        { name: 'Audit timeframe', type: 'choice', label: 'When would you like the audit?', options: ['Within 2 weeks', 'Within a month', 'In 1–3 months', 'I’m flexible'] },
-        budgetStep, priorityStep, contactStep
-      ]
-    },
-    'new': {
-      title: 'New system build',
-      steps: [
-        { name: 'Intended use', type: 'text', label: 'What will the system be used for?', placeholder: 'Services, livestreams, conferences, events…' },
-        { name: 'Requirements', type: 'text', label: 'Anything specific you need?', placeholder: 'Microphones, cameras, screens, streaming platforms…' },
-        { name: 'Team size', type: 'choice', label: 'How many people will run it?', options: TEAM },
-        budgetStep, priorityStep, contactStep
-      ]
-    }
-  };
-
-  var branch = document.getElementById('branch'), form = document.getElementById('qform'), done = document.getElementById('qDone');
-  var stepsWrap = document.getElementById('qSteps'), bar = document.getElementById('qBar'), err = document.getElementById('qError');
-  var nextBtn = document.getElementById('qNext'), backBtn = document.getElementById('qBack');
-  var flowKey = null, flow = null, idx = 0, stepEls2 = [];
-
-  function slug(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g, '-'); }
-
-  function renderStep(s, j) {
-    var id = 'q' + j;
-    if (s.type === 'text') {
-      return '<div class="qstep" data-type="text"><label class="q-label" for="' + id + '">' + s.label + '</label>' +
-        '<textarea id="' + id + '" name="' + s.name + '" placeholder="' + (s.placeholder || '') + '"></textarea></div>';
-    }
-    if (s.type === 'choice') {
-      return '<fieldset class="qstep" data-type="choice"><legend class="q-label">' + s.label + '</legend>' +
-        (s.note ? '<p class="q-note">' + s.note + '</p>' : '') +
-        '<div class="opts">' + s.options.map(function (o) {
-          return '<label class="opt"><input type="radio" name="' + slug(s.name) + '" value="' + o + '" data-field="' + s.name + '"><span>' + o + '</span></label>';
-        }).join('') + '</div></fieldset>';
-    }
-    return '<div class="qstep" data-type="contact"><span class="q-label">' + s.label + '</span>' +
-      (s.note ? '<p class="q-note">' + s.note + '</p>' : '') +
-      '<div class="contact-fields">' +
-      '<div class="field"><label for="cName">Name</label><input type="text" id="cName" name="Name" autocomplete="name"></div>' +
-      '<div class="field"><label for="cOrg">Organisation</label><input type="text" id="cOrg" name="Organisation" autocomplete="organization"></div>' +
-      '<div class="field"><label for="cEmail">Email</label><input type="email" id="cEmail" name="Email" autocomplete="email"></div>' +
-      '<div class="field"><label for="cPhone">Phone (optional)</label><input type="tel" id="cPhone" name="Phone" autocomplete="tel"></div>' +
-      '</div></div>';
-  }
-
-  function startFlow(key) {
-    flowKey = key; flow = FLOWS[key]; idx = 0;
-    document.getElementById('qTitle').textContent = flow.title;
-    stepsWrap.innerHTML = flow.steps.map(renderStep).join('');
-    stepEls2 = Array.prototype.slice.call(stepsWrap.querySelectorAll('.qstep'));
-    stepsWrap.querySelectorAll('input[type=radio]').forEach(function (r) {
-      r.addEventListener('change', function () { setTimeout(function () { if (idx < flow.steps.length - 1) go(1); }, 260); });
-    });
-    branch.classList.add('hidden'); done.hidden = true; form.hidden = false;
-    show();
-  }
-
-  function show() {
-    stepEls2.forEach(function (el, j) { el.classList.toggle('current', j === idx); });
-    bar.style.width = ((idx + 1) / flow.steps.length * 100) + '%';
-    backBtn.style.visibility = idx === 0 ? 'hidden' : 'visible';
-    nextBtn.textContent = idx === flow.steps.length - 1 ? 'Send' : 'Next';
-    err.textContent = '';
-    var first = stepEls2[idx].querySelector('textarea, input');
-    if (first && first.type !== 'radio') first.focus({ preventScroll: true });
-  }
-
-  function valid() {
-    var el = stepEls2[idx], type = el.getAttribute('data-type');
-    if (type === 'text') return el.querySelector('textarea').value.trim() ? '' : 'Please add a short answer.';
-    if (type === 'choice') return el.querySelector('input:checked') ? '' : 'Please choose an option.';
-    var name = el.querySelector('#cName').value.trim(), org = el.querySelector('#cOrg').value.trim(), email = el.querySelector('#cEmail').value.trim();
-    if (!name || !org) return 'Please add your name and organisation.';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Please add a valid email address.';
-    return '';
-  }
-
-  function go(dir) {
-    if (dir > 0) { var msg = valid(); if (msg) { err.textContent = msg; return; } }
-    idx = clamp(idx + dir, 0, flow.steps.length - 1);
-    show();
-  }
-
-  function collect() {
-    var data = { 'Enquiry type': flow.title };
-    flow.steps.forEach(function (s, j) {
-      var el = stepEls2[j];
-      if (s.type === 'text') data[s.name] = el.querySelector('textarea').value.trim();
-      else if (s.type === 'choice') { var c = el.querySelector('input:checked'); data[s.name] = c ? c.value : ''; }
-      else el.querySelectorAll('input').forEach(function (inp) { data[inp.name] = inp.value.trim(); });
-    });
-    return data;
-  }
-
-  function submit() {
-    var msg = valid(); if (msg) { err.textContent = msg; return; }
-    if (form.querySelector('.hp').value) return; // spam trap
-    var data = collect();
-    nextBtn.disabled = true; nextBtn.textContent = 'Sending…';
-    var finish = function () { form.hidden = true; done.hidden = false; nextBtn.disabled = false; };
-    if (CONFIG.formEndpoint) {
-      fetch(CONFIG.formEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(data) })
-        .then(function (res) { if (!res.ok) throw new Error('Send failed'); finish(); })
-        .catch(function () {
-          nextBtn.disabled = false; nextBtn.textContent = 'Send';
-          err.textContent = 'Something went wrong. Please try again, or email us at ' + CONFIG.email + '.';
-        });
-    } else {
-      var body = Object.keys(data).map(function (k) { return k + ': ' + data[k]; }).join('\n');
-      window.location.href = 'mailto:' + CONFIG.email + '?subject=' + encodeURIComponent('Website enquiry: ' + flow.title) + '&body=' + encodeURIComponent(body);
-      finish();
-    }
-  }
-
-  branch.querySelectorAll('[data-flow]').forEach(function (b) { b.addEventListener('click', function () { startFlow(b.getAttribute('data-flow')); }); });
-  nextBtn.addEventListener('click', function () { if (idx === flow.steps.length - 1) submit(); else go(1); });
-  backBtn.addEventListener('click', function () { go(-1); });
-  form.addEventListener('submit', function (e) { e.preventDefault(); });
-  form.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'radio') { e.preventDefault(); nextBtn.click(); }
-  });
-  document.getElementById('qChange').addEventListener('click', function () { form.hidden = true; branch.classList.remove('hidden'); });
-  document.getElementById('qRestart').addEventListener('click', function () { done.hidden = true; branch.classList.remove('hidden'); });
-})();
-</script>
-<script src="js/network.js?v=59"></script>
+  <script src="js/network.js?v=57"></script>
+  <script src="js/questionnaire.js?v=57"></script>
+  <script src="js/main.js?v=57"></script>
 </body>
 </html>
