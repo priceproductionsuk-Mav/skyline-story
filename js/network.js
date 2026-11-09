@@ -668,13 +668,13 @@
   /* ---------- One continuous line: grows out of step 1, lights each step's dot,
      then carries on as a light streak down to the end of the page ---------- */
 
-  const footer = document.querySelector('.footer');
+  const footer = document.querySelector('footer');
   // Content the trail passes behind: it disappears behind these and glows in the gaps
-  const occluders = [...document.querySelectorAll('.section-head, .contact-head, .card, .contact-form, .contact-done, .packages-help a')];
+  const occluders = [...document.querySelectorAll('.eyebrow, .section-title, .lede, .card, .branch button, .qform, .q-done, .contact .actions, .contact .mail')];
   // iPhone: the packages' position dots, which the streak spreads across
-  const pkgDots = [...document.querySelectorAll('.carousel-dots button')];
+  const pkgDots = [...document.querySelectorAll('.pkg-dots button')];
   // The dots on the Services and Packages cards, which light as the streak passes them
-  const serviceNodes = [...document.querySelectorAll('.service .node, .package .node, .quote .node')];
+  const serviceNodes = [...document.querySelectorAll('.svc .motif')];
 
   function drawTrail() {
     if (!markers.length || !footer) return;
@@ -758,7 +758,7 @@
           y,
           xs: rs.map(r => r.left + r.width / 2),
           spread: ease(smooth(y, y + 70, headY)),
-          seen: pkgDots.map(b => (b.classList.contains('seen') ? 1 : 0)),
+          seen: pkgDots.map(b => (b.classList.contains('on') ? 1 : 0)),
         };
       }
     }
